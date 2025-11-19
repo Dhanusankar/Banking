@@ -6,4 +6,8 @@ def classify_intent(message: str) -> str:
         return "balance_inquiry"
     if "transfer" in m or "send" in m or "pay" in m:
         return "money_transfer"
+    if "statement" in m or "account statement" in m or "show statement" in m:
+        return "account_statement"
+    if "loan" in m or "loan inquiry" in m or "apply for loan" in m:
+        return "loan_inquiry"
     return "fallback"

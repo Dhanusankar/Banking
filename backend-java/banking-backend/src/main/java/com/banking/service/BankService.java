@@ -54,4 +54,23 @@ public class BankService {
 
         return new TransferResponse(true, String.format("Transferred %.2f from %s to %s", req.getAmount(), req.getFromAccount(), req.getToAccount()));
     }
+    // New method: account statement
+    public String getStatement(String accountId) {
+        Account a = accounts.get(accountId);
+        if (a == null) {
+            return "Account not found: " + accountId;
+        }
+        // For POC, just return a simple statement string
+        return String.format("Statement for account %s: Balance %.2f", a.getAccountId(), a.getBalance());
+    }
+
+    // New method: loan inquiry
+    public String getLoanInfo(String accountId) {
+        Account a = accounts.get(accountId);
+        if (a == null) {
+            return "Account not found: " + accountId;
+        }
+        // For POC, return a mock loan info string
+        return String.format("Loan info for account %s: Eligible for up to $%.2f", a.getAccountId(), a.getBalance() * 2);
+    }
 }

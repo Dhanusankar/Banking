@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend-java/banking-backend
+    ports:
+      - "8081:8081"
+    networks:
+      - banking-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/balance?accountId=123"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  orchestrator:
+    build:
+      context: ./ai-orchestrator
+    ports:
+      - "8000:8000"
+    networks:
+      - banking-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  ui:
+    build:
+      context: ./ui
+    ports:
+      - "8501:8501"
+    networks:
+      - banking-network
+    depends_on:
+      - orchestrator
+    environment:
+      - ORCHESTRATOR_URL=http://orchestrator:8000/chat
+
+networks:
+  banking-network:
+    driver: bridge

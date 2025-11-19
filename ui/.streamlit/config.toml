@@ -1,0 +1,12 @@
+# Streamlit Cloud Deployment Config
+# This tells Streamlit Cloud which Python version and packages to use
+
+[general]
+email = ""
+
+[server]
+headless = true
+port = 8501
+
+[browser]
+gatherUsageStats = false

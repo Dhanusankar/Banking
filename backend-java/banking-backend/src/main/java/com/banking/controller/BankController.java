@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "*")
 public class BankController {
     private final BankService bankService;
 
@@ -32,5 +33,19 @@ public class BankController {
             return ResponseEntity.badRequest().body(resp);
         }
         return ResponseEntity.ok(resp);
+    }
+
+    // New endpoint: account statement
+    @GetMapping("/statement")
+    public ResponseEntity<String> getStatement(@RequestParam(name = "accountId", defaultValue = "123") String accountId) {
+        String statement = bankService.getStatement(accountId);
+        return ResponseEntity.ok(statement);
+    }
+
+    // New endpoint: loan inquiry
+    @GetMapping("/loan")
+    public ResponseEntity<String> getLoanInfo(@RequestParam(name = "accountId", defaultValue = "123") String accountId) {
+        String loanInfo = bankService.getLoanInfo(accountId);
+        return ResponseEntity.ok(loanInfo);
     }
 }
