@@ -1,0 +1,28 @@
+# Banking AI POC v2.0 - Production Workflow Engine
+# Python 3.11+ required
+
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# LangGraph and AI
+langgraph==0.0.25
+langchain==0.1.0
+langchain-core==0.1.0
+langchain-openai==0.0.2
+
+# HTTP Client
+requests==2.31.0
+
+# UI
+streamlit==1.28.1
+
+# Database (SQLite built-in, optional PostgreSQL)
+# psycopg2-binary==2.9.9  # Uncomment for PostgreSQL
+
+# Cache (Optional - for production with Redis)
+# redis==5.0.1  # Uncomment for Redis backend
+
+# Utilities
+python-dotenv==1.0.0
