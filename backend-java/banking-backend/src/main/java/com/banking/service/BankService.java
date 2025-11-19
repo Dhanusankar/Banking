@@ -19,7 +19,7 @@ public class BankService {
     @PostConstruct
     public void init() {
         // Seed some accounts
-        accounts.put("123", new Account("123", 5000.00));
+        accounts.put("123", new Account("123", 50000.00));
         accounts.put("kiran", new Account("kiran", 1000.00));
     }
 
