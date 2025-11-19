@@ -55,10 +55,19 @@ class SQLiteCheckpointBackend(CheckpointBackend):
                 node_id TEXT,
                 state TEXT NOT NULL,
                 metadata TEXT,
-                created_at TEXT NOT NULL,
-                INDEX idx_session (session_id),
-                INDEX idx_checkpoint (checkpoint_id)
+                created_at TEXT NOT NULL
             )
+        """)
+        
+        # Create indexes separately
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_session 
+            ON checkpoints(session_id)
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_checkpoint 
+            ON checkpoints(checkpoint_id)
         """)
         
         conn.commit()

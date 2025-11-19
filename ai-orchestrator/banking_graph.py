@@ -25,7 +25,7 @@ class BankingState(TypedDict):
     recipient: str
     from_account: str
     request_data: dict
-    response: Annotated[dict, operator.add]
+    response: dict
     error: str
     hil_decision: dict
     execution_history: Annotated[list, operator.add]
