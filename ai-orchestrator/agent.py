@@ -8,6 +8,10 @@ except Exception:
     StateGraph = None
     END = None
 from transfer_extractor import extract_transfer_details
+from persistence import persistence
+
+# HIL approval threshold
+HIGH_VALUE_THRESHOLD = 5000.0
 
 def balance_tool(state: dict) -> dict:
     print(f"DEBUG: balance_tool state={state}")
@@ -28,6 +32,46 @@ def transfer_tool(state: dict) -> dict:
         return {"intent": "money_transfer", "error": "Could not parse transfer details", "message": message}
     to_account = details.get("recipient", "kiran").lower()
     amount = details.get("amount")
+    
+    # Check if high-value transfer requires approval
+    if amount > HIGH_VALUE_THRESHOLD:
+        session_id = state.get("session_id")
+        if not session_id:
+            # Create new session if none exists
+            session_id = persistence.create_session(user_id=state.get("user_id", "default_user"))
+        
+        # Check if already approved
+        if state.get("approved"):
+            print(f"DEBUG: High-value transfer approved, proceeding with execution")
+        else:
+            # Create approval request
+            approval_id = persistence.create_approval_request(
+                session_id=session_id,
+                workflow_type="money_transfer",
+                request_data={
+                    "fromAccount": "123",
+                    "toAccount": to_account,
+                    "amount": amount,
+                    "message": message
+                },
+                amount=amount,
+                recipient=to_account
+            )
+            
+            # Save state for resumption
+            persistence.save_state(session_id, state, status="pending_approval")
+            
+            return {
+                "intent": "money_transfer",
+                "status": "pending_approval",
+                "approval_id": approval_id,
+                "session_id": session_id,
+                "message": f"Transfer of ${amount} to {to_account} requires approval. Approval ID: {approval_id}",
+                "amount": amount,
+                "recipient": to_account
+            }
+    
+    # Proceed with transfer (either low-value or approved)
     return {
         "intent": "money_transfer",
         "method": "POST",
@@ -37,7 +81,9 @@ def transfer_tool(state: dict) -> dict:
             "toAccount": to_account,
             "amount": amount
         },
-        "message": message
+        "message": message,
+        "amount": amount,
+        "recipient": to_account
     }
 
 def fallback_tool(state: dict) -> dict:
