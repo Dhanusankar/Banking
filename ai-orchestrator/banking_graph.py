@@ -5,6 +5,7 @@ Includes automatic checkpointing, HIL nodes, and resume capabilities.
 from typing import TypedDict, Annotated
 from langgraph.graph import StateGraph, END
 import operator
+import os
 
 from checkpoint_store import checkpoint_store
 from hil_node import transfer_hil_node
@@ -31,8 +32,8 @@ class BankingState(TypedDict):
     execution_history: Annotated[list, operator.add]
 
 
-# Backend API configuration
-BACKEND_URL = "http://localhost:8081"
+# Backend API configuration (supports cloud deployment)
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8081")
 
 
 def checkpoint_wrapper(node_id: str):

@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Java
+target/
+*.class
+*.jar
+!backend-java/banking-backend/target/*.jar
+.mvn/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Databases (keep structure, not data)
+*.db
+*.db-journal
+
+# Git
+.git/
+.gitignore
+
+# Docs (keep in repo)
+!*.md
+!DEPLOYMENT.md

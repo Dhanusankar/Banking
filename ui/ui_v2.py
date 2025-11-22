@@ -1,21 +1,22 @@
 """
 Production Streamlit UI with session management and workflow tracking.
 Supports real-time approval notifications and status updates.
+Cloud-ready with environment variable support.
 """
 import os
 import streamlit as st
 import requests
 from datetime import datetime
 
-# Configure orchestrator URL
-BASE_URL = None
-try:
-    BASE_URL = st.secrets.get("ORCHESTRATOR_URL")
-except Exception:
-    BASE_URL = None
+# Configure orchestrator URL (supports cloud deployment)
+BASE_URL = os.environ.get("ORCHESTRATOR_URL", "http://localhost:8000")
 
-if not BASE_URL:
-    BASE_URL = os.environ.get("ORCHESTRATOR_URL", "http://localhost:8000")
+# Try Streamlit secrets as fallback (for Streamlit Cloud)
+try:
+    if not BASE_URL or BASE_URL == "http://localhost:8000":
+        BASE_URL = st.secrets.get("ORCHESTRATOR_URL", BASE_URL)
+except Exception:
+    pass
 
 # API endpoints
 CHAT_URL = f"{BASE_URL}/chat"
