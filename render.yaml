@@ -5,11 +5,11 @@ services:
   # 1. Java Backend Service
   - type: web
     name: banking-backend
-    env: java
+    runtime: docker
     region: oregon
     plan: free
-    buildCommand: cd backend-java/banking-backend && mvn clean package -DskipTests
-    startCommand: cd backend-java/banking-backend && java -jar target/banking-backend-0.0.1-SNAPSHOT.jar
+    dockerfilePath: ./Dockerfile
+    dockerContext: ./backend-java/banking-backend
     healthCheckPath: /api/balance?accountId=123
     envVars:
       - key: SERVER_PORT
@@ -20,11 +20,12 @@ services:
   # 2. AI Orchestrator Service
   - type: web
     name: banking-orchestrator
-    env: python
+    runtime: python
     region: oregon
     plan: free
-    buildCommand: cd ai-orchestrator && pip install -r requirements_v2.txt
-    startCommand: cd ai-orchestrator && uvicorn server_v2:app --host 0.0.0.0 --port 8000
+    buildCommand: pip install -r requirements_v2.txt
+    startCommand: uvicorn server_v2:app --host 0.0.0.0 --port 8000
+    rootDirectory: ./ai-orchestrator
     healthCheckPath: /health
     envVars:
       - key: BACKEND_URL
@@ -40,11 +41,12 @@ services:
   # 3. Streamlit UI Service
   - type: web
     name: banking-ui
-    env: python
+    runtime: python
     region: oregon
     plan: free
-    buildCommand: cd ui && pip install -r requirements.txt
-    startCommand: cd ui && streamlit run ui_v2.py --server.port 8501 --server.address 0.0.0.0
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run ui_v2.py --server.port 8501 --server.address 0.0.0.0
+    rootDirectory: ./ui
     envVars:
       - key: ORCHESTRATOR_URL
         fromService:
