@@ -96,6 +96,66 @@ def format_timestamp(iso_timestamp: str) -> str:
         return iso_timestamp
 
 
+def format_response(reply: dict) -> str:
+    """Format API response into user-friendly message."""
+    if isinstance(reply, str):
+        return reply
+    
+    if not isinstance(reply, dict):
+        return str(reply)
+    
+    # Handle error responses
+    if "error" in reply:
+        return f"❌ Error: {reply['error']}"
+    
+    # Extract intent and data
+    intent = reply.get('intent', '')
+    status = reply.get('status', '')
+    data = reply.get('data', {})
+    
+    # Balance inquiry
+    if intent == 'balance_inquiry' and status == 'success':
+        balance = data.get('balance', 0)
+        return f"💰 Your current balance is **${balance:,.2f}**"
+    
+    # Transfer success
+    if intent == 'transfer' and status == 'success':
+        amount = data.get('amount', 0)
+        recipient = data.get('recipientAccount', 'recipient')
+        return f"✅ Transfer successful! ${amount:,.2f} sent to {recipient}"
+    
+    # Statement
+    if intent == 'statement' and status == 'success':
+        transactions = data.get('transactions', [])
+        if transactions:
+            msg = f"📊 **Recent Transactions ({len(transactions)})**\n\n"
+            for txn in transactions[:5]:  # Show first 5
+                date = txn.get('date', 'N/A')
+                desc = txn.get('description', 'N/A')
+                amt = txn.get('amount', 0)
+                msg += f"• {date}: {desc} - ${amt:,.2f}\n"
+            return msg
+        return "📊 No recent transactions found"
+    
+    # Loan information
+    if intent == 'loan' and status == 'success':
+        loan_type = data.get('loanType', 'N/A')
+        amount = data.get('amount', 0)
+        interest = data.get('interestRate', 0)
+        tenure = data.get('tenure', 0)
+        return f"🏦 **Loan Information**\n\n**Type:** {loan_type}\n**Amount:** ${amount:,.2f}\n**Interest Rate:** {interest}%\n**Tenure:** {tenure} months"
+    
+    # Pending approval
+    if status == 'PENDING_APPROVAL':
+        return reply  # Keep existing approval format
+    
+    # Default: return the message or full dict
+    if 'message' in reply:
+        return reply['message']
+    
+    return str(reply)
+
+
 def main():
     st.set_page_config(
         page_title="Banking AI POC v2.0",
@@ -342,7 +402,8 @@ def main():
                 message_text += f"**Recipient:** {reply.get('recipient', 'N/A')}\n"
                 message_text += f"**Approval ID:** `{reply.get('approval_id', 'N/A')}`"
             else:
-                message_text = str(reply)
+                # Format response to user-friendly message
+                message_text = format_response(reply)
             
             st.session_state["messages"].append({
                 "role": "assistant",
