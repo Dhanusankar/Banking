@@ -180,8 +180,16 @@ def format_response(reply: dict) -> str:
         loan_text = data.get('loan_info', '')
         if loan_text:
             import re
-            # Extract eligible amount
-            amount_match = re.search(r'\$?(\d+(?:,\d{3})*\.?\d*)', loan_text)
+            # Extract eligible amount - look for patterns like "$100000.00", "100000", "$100,000"
+            # Try to find amount after "up to" first (most specific)
+            amount_match = re.search(r'up\s+to\s+\$?(\d+(?:,\d{3})*\.?\d*)', loan_text, re.IGNORECASE)
+            if not amount_match:
+                # Fallback to any dollar amount
+                amount_match = re.search(r'\$(\d+(?:,\d{3})*\.?\d*)', loan_text)
+            if not amount_match:
+                # Last fallback to any number
+                amount_match = re.search(r'(\d+(?:,\d{3})*\.?\d*)', loan_text)
+            
             account_match = re.search(r'account\s+(\w+)', loan_text, re.IGNORECASE)
             
             account = account_match.group(1) if account_match else 'your account'
