@@ -118,11 +118,24 @@ def format_response(reply: dict) -> str:
         balance = data.get('balance', 0)
         return f"💰 Your current balance is **${balance:,.2f}**"
     
-    # Transfer success
-    if intent == 'transfer' and status == 'success':
-        amount = data.get('amount', 0)
-        recipient = data.get('recipientAccount', 'recipient')
-        return f"✅ Transfer successful! ${amount:,.2f} sent to {recipient}"
+    # Transfer success (handle both 'transfer' and 'money_transfer' intents)
+    if (intent in ['transfer', 'money_transfer']) and status == 'success':
+        # Try to extract amount from various possible locations
+        amount = data.get('amount') or data.get('transferAmount', 0)
+        recipient = data.get('recipientAccount') or data.get('recipient', 'recipient')
+        
+        # Parse amount from message if not found
+        if not amount and 'message' in data:
+            import re
+            match = re.search(r'(\d+\.?\d*)', data['message'])
+            if match:
+                amount = float(match.group(1))
+        
+        # Get approval type
+        approved_by = reply.get('approved_by', '')
+        approval_note = " (Auto-approved)" if approved_by == 'auto' else ""
+        
+        return f"✅ **Transfer successful!{approval_note}**\n\n${amount:,.2f} has been sent to {recipient}"
     
     # Statement
     if intent == 'statement' and status == 'success':
