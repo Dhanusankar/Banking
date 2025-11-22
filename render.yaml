@@ -23,9 +23,9 @@ services:
     runtime: python
     region: oregon
     plan: free
+    rootDir: ai-orchestrator
     buildCommand: pip install -r requirements_v2.txt
     startCommand: uvicorn server_v2:app --host 0.0.0.0 --port 8000
-    rootDirectory: ./ai-orchestrator
     healthCheckPath: /health
     envVars:
       - key: BACKEND_URL
@@ -44,9 +44,9 @@ services:
     runtime: python
     region: oregon
     plan: free
+    rootDir: ui
     buildCommand: pip install -r requirements.txt
     startCommand: streamlit run ui_v2.py --server.port 8501 --server.address 0.0.0.0
-    rootDirectory: ./ui
     envVars:
       - key: ORCHESTRATOR_URL
         fromService:
