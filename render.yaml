@@ -31,10 +31,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: BACKEND_URL
-        fromService:
-          type: web
-          name: banking-backend
-          property: host
+        sync: false
       - key: PORT
         value: 8000
       - key: PYTHONUNBUFFERED
@@ -53,10 +50,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: ORCHESTRATOR_URL
-        fromService:
-          type: web
-          name: banking-orchestrator
-          property: host
+        sync: false
       - key: PORT
         value: 8501
 
