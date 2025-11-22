@@ -16,7 +16,7 @@ import requests
 
 
 # Define the state schema for the banking workflow
-class BankingState(TypedDict):
+class BankingState(TypedDict, total=False):
     """State schema for banking workflow with full context."""
     message: str
     intent: str
@@ -30,6 +30,7 @@ class BankingState(TypedDict):
     error: str
     hil_decision: dict
     execution_history: Annotated[list, operator.add]
+    _halt: bool  # Internal flag for pausing workflow
 
 
 # Backend API configuration (supports cloud deployment)
