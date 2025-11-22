@@ -129,21 +129,29 @@ def main():
             color: #003d82 !important;
         }
         
-        /* Chat containers */
+        /* Chat containers - transparent with blue tint */
         .stChatMessage {
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(255, 255, 255, 0.15);
             border-radius: 10px;
             padding: 15px;
             margin: 10px 0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 61, 130, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Chat message text - black color */
+        .stChatMessage p,
+        .stChatMessage span,
+        .stChatMessage div {
+            color: #000000 !important;
         }
         
         /* Input boxes */
         .stTextInput input {
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.9);
             border: 2px solid #003d82;
             border-radius: 5px;
-            color: #003d82;
+            color: #000000;
         }
         
         /* Buttons */
@@ -164,23 +172,23 @@ def main():
             color: #003d82;
         }
         
-        /* Success/Info boxes */
+        /* Success/Info boxes - transparent blue */
         .stSuccess {
-            background-color: #e8f4f8;
-            color: #003d82;
+            background-color: rgba(232, 244, 248, 0.3);
+            color: #ffffff;
             border-left: 4px solid #0055b8;
         }
         
         .stInfo {
-            background-color: #f0f8ff;
-            color: #003d82;
-            border-left: 4px solid #003d82;
+            background-color: rgba(240, 248, 255, 0.2);
+            color: #ffffff;
+            border-left: 4px solid #ffffff;
         }
         
         /* Expander */
         .streamlit-expanderHeader {
-            background-color: rgba(255, 255, 255, 0.9);
-            color: #003d82;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
             border-radius: 5px;
         }
         
@@ -195,12 +203,18 @@ def main():
             color: #003d82;
         }
         
-        /* Form styling */
+        /* Form styling - transparent with blue tint */
         [data-testid="stForm"] {
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(255, 255, 255, 0.15);
             border-radius: 10px;
             padding: 20px;
-            border: 2px solid #003d82;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Form text to black */
+        [data-testid="stForm"] label,
+        [data-testid="stForm"] p {
+            color: #000000 !important;
         }
         
         /* Caption text */
@@ -210,6 +224,11 @@ def main():
         
         [data-testid="stSidebar"] .stCaption {
             color: #666666;
+        }
+        
+        /* Message containers */
+        [data-testid="stVerticalBlock"] > div {
+            color: #000000;
         }
         </style>
     """, unsafe_allow_html=True)
