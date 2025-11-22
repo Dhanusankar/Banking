@@ -11,6 +11,10 @@ from datetime import datetime
 # Configure orchestrator URL (supports cloud deployment)
 BASE_URL = os.environ.get("ORCHESTRATOR_URL", "http://localhost:8000")
 
+# Add https:// scheme if not present (for Render deployment)
+if BASE_URL and not BASE_URL.startswith(("http://", "https://")):
+    BASE_URL = f"https://{BASE_URL}"
+
 # Try Streamlit secrets as fallback (for Streamlit Cloud)
 try:
     if not BASE_URL or BASE_URL == "http://localhost:8000":

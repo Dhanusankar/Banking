@@ -34,6 +34,9 @@ class BankingState(TypedDict):
 
 # Backend API configuration (supports cloud deployment)
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8081")
+# Add https:// scheme if not present (for Render hostport property)
+if BACKEND_URL and not BACKEND_URL.startswith(("http://", "https://")):
+    BACKEND_URL = f"https://{BACKEND_URL}"
 
 
 def checkpoint_wrapper(node_id: str):
