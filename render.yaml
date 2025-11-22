@@ -34,7 +34,7 @@ services:
         fromService:
           type: web
           name: banking-backend
-          property: host
+          property: url
       - key: PORT
         value: 8000
       - key: PYTHONUNBUFFERED
@@ -56,7 +56,7 @@ services:
         fromService:
           type: web
           name: banking-orchestrator
-          property: host
+          property: url
       - key: PORT
         value: 8501
 
