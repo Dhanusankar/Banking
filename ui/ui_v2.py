@@ -103,6 +103,117 @@ def main():
         layout="wide"
     )
     
+    # Custom CSS for banking blue and white theme
+    st.markdown("""
+        <style>
+        /* Main background */
+        .stApp {
+            background: linear-gradient(135deg, #003d82 0%, #0055b8 100%);
+        }
+        
+        /* Sidebar styling */
+        [data-testid="stSidebar"] {
+            background-color: #ffffff;
+            border-right: 3px solid #003d82;
+        }
+        
+        /* Headers */
+        h1, h2, h3 {
+            color: #ffffff !important;
+        }
+        
+        /* Sidebar headers */
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3 {
+            color: #003d82 !important;
+        }
+        
+        /* Chat containers */
+        .stChatMessage {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Input boxes */
+        .stTextInput input {
+            background-color: #ffffff;
+            border: 2px solid #003d82;
+            border-radius: 5px;
+            color: #003d82;
+        }
+        
+        /* Buttons */
+        .stButton button {
+            background-color: #003d82;
+            color: white;
+            border-radius: 5px;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .stButton button:hover {
+            background-color: #0055b8;
+        }
+        
+        /* Metrics */
+        [data-testid="stMetricValue"] {
+            color: #003d82;
+        }
+        
+        /* Success/Info boxes */
+        .stSuccess {
+            background-color: #e8f4f8;
+            color: #003d82;
+            border-left: 4px solid #0055b8;
+        }
+        
+        .stInfo {
+            background-color: #f0f8ff;
+            color: #003d82;
+            border-left: 4px solid #003d82;
+        }
+        
+        /* Expander */
+        .streamlit-expanderHeader {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #003d82;
+            border-radius: 5px;
+        }
+        
+        /* Text color adjustments */
+        p, label, .stMarkdown {
+            color: #ffffff;
+        }
+        
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] .stMarkdown {
+            color: #003d82;
+        }
+        
+        /* Form styling */
+        [data-testid="stForm"] {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #003d82;
+        }
+        
+        /* Caption text */
+        .stCaption {
+            color: #e0e0e0;
+        }
+        
+        [data-testid="stSidebar"] .stCaption {
+            color: #666666;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
     # Initialize session state
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
