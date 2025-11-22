@@ -137,8 +137,9 @@ def format_response(reply: dict) -> str:
         
         return f"✅ **Transfer successful!{approval_note}**\n\n${amount:,.2f} has been sent to {recipient}"
     
-    # Statement
-    if intent == 'statement' and status == 'success':
+    # Statement (handle both 'statement' and 'account_statement' intents)
+    if intent in ['statement', 'account_statement'] and status == 'success':
+        # Check if we have structured transaction data
         transactions = data.get('transactions', [])
         if transactions:
             msg = f"📊 **Recent Transactions ({len(transactions)})**\n\n"
@@ -148,15 +149,48 @@ def format_response(reply: dict) -> str:
                 amt = txn.get('amount', 0)
                 msg += f"• {date}: {desc} - ${amt:,.2f}\n"
             return msg
+        
+        # Fallback: extract info from statement string
+        statement_text = data.get('statement', '')
+        if statement_text:
+            import re
+            # Extract balance from statement
+            balance_match = re.search(r'Balance\s+(\d+\.?\d*)', statement_text)
+            account_match = re.search(r'account\s+(\w+)', statement_text, re.IGNORECASE)
+            
+            account = account_match.group(1) if account_match else 'your account'
+            balance = float(balance_match.group(1)) if balance_match else 0
+            
+            return f"📊 **Account Statement**\n\nAccount: {account}\nCurrent Balance: **${balance:,.2f}**"
+        
         return "📊 No recent transactions found"
     
-    # Loan information
-    if intent == 'loan' and status == 'success':
-        loan_type = data.get('loanType', 'N/A')
+    # Loan information (handle both 'loan' and 'loan_inquiry' intents)
+    if intent in ['loan', 'loan_inquiry'] and status == 'success':
+        # Check for structured data
+        loan_type = data.get('loanType')
         amount = data.get('amount', 0)
         interest = data.get('interestRate', 0)
         tenure = data.get('tenure', 0)
-        return f"🏦 **Loan Information**\n\n**Type:** {loan_type}\n**Amount:** ${amount:,.2f}\n**Interest Rate:** {interest}%\n**Tenure:** {tenure} months"
+        
+        if loan_type:
+            return f"🏦 **Loan Information**\n\n**Type:** {loan_type}\n**Amount:** ${amount:,.2f}\n**Interest Rate:** {interest}%\n**Tenure:** {tenure} months"
+        
+        # Fallback: extract info from loan_info string
+        loan_text = data.get('loan_info', '')
+        if loan_text:
+            import re
+            # Extract eligible amount
+            amount_match = re.search(r'\$?(\d+(?:,\d{3})*\.?\d*)', loan_text)
+            account_match = re.search(r'account\s+(\w+)', loan_text, re.IGNORECASE)
+            
+            account = account_match.group(1) if account_match else 'your account'
+            eligible_amount = amount_match.group(1).replace(',', '') if amount_match else '0'
+            eligible_amount = float(eligible_amount)
+            
+            return f"🏦 **Loan Information**\n\nAccount: {account}\nYou are eligible for a loan up to **${eligible_amount:,.2f}**"
+        
+        return "🏦 Loan information not available"
     
     # Pending approval
     if status == 'PENDING_APPROVAL':
