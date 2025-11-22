@@ -8,7 +8,8 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    dockerfilePath: ./backend-java/banking-backend/Dockerfile
+    dockerfilePath: Dockerfile
+    dockerContext: backend-java/banking-backend
     healthCheckPath: /api/balance?accountId=123
     envVars:
       - key: SERVER_PORT
