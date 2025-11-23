@@ -32,6 +32,8 @@ class BankingState(TypedDict, total=False):
     execution_history: Annotated[list, operator.add]
     _halt: bool  # Internal flag for pausing workflow
     confidence: float  # LLM confidence score (0.0-1.0)
+    needs_approval: bool  # Flag for low-confidence requests
+    approval_reason: str  # Reason for requiring approval
 
 
 # Backend API configuration (supports cloud deployment)
@@ -117,6 +119,27 @@ def validate_input_node(state: BankingState) -> BankingState:
             state["from_account"] = entities["account"]
     
     print(f"🤖 LLM Intent: {intent} (confidence: {confidence:.2f})")
+    return state
+
+
+@checkpoint_wrapper("confidence_check")
+def confidence_check_node(state: BankingState) -> BankingState:
+    """
+    Check LLM confidence score and decide if HIL approval is needed.
+    If confidence < threshold, request human review.
+    Checkpoint: Saved before potential HIL routing.
+    """
+    confidence = state.get("confidence", 0.5)
+    threshold = 0.80  # Confidence threshold for automatic processing
+    
+    if confidence < threshold:
+        print(f"⚠️ Low confidence ({confidence:.2f} < {threshold}) - Requires human approval")
+        state["needs_approval"] = True
+        state["approval_reason"] = f"Low LLM confidence: {confidence:.2f}"
+    else:
+        print(f"✓ High confidence ({confidence:.2f}) - Proceeding automatically")
+        state["needs_approval"] = False
+    
     return state
 
 
@@ -342,11 +365,59 @@ def route_after_transfer_prepare(state: BankingState) -> str:
 
 
 def route_after_hil(state: BankingState) -> str:
-    """Route after HIL check - halt if pending, execute if approved."""
+    """
+    Route after HIL check - halt if pending, execute if approved.
+    For low-confidence requests, route back to intent-specific node.
+    For transfers, execute the transfer.
+    """
     if state.get("_halt"):
         return END
     
+    # Check if this was a low-confidence request (not a transfer)
+    needs_approval = state.get("needs_approval", False)
+    intent = state.get("intent", "fallback")
+    
+    if needs_approval and intent != "money_transfer":
+        # Low confidence request approved - route to appropriate handler
+        routing_map = {
+            "balance_inquiry": "balance_inquiry",
+            "account_statement": "account_statement",
+            "loan_inquiry": "loan_inquiry",
+            "fallback": "fallback"
+        }
+        return routing_map.get(intent, "fallback")
+    
+    # Transfer requests always go to execution
     return "money_transfer_execute"
+
+
+def route_after_confidence_check(state: BankingState) -> str:
+    """
+    Route based on confidence score and intent.
+    Low confidence → HIL approval required
+    High confidence → Route to intent-specific node
+    """
+    needs_approval = state.get("needs_approval", False)
+    
+    # If low confidence, always go to HIL first
+    if needs_approval:
+        print("🔀 Routing to HIL due to low confidence")
+        return "money_transfer_hil"
+    
+    # Otherwise route by intent
+    intent = state.get("intent", "fallback")
+    
+    routing_map = {
+        "balance_inquiry": "balance_inquiry",
+        "money_transfer": "money_transfer_prepare",
+        "account_statement": "account_statement",
+        "loan_inquiry": "loan_inquiry",
+        "fallback": "fallback"
+    }
+    
+    route = routing_map.get(intent, "fallback")
+    print(f"🔀 High confidence - routing to: {route}")
+    return route
 
 
 def build_banking_graph() -> StateGraph:
@@ -372,6 +443,7 @@ def build_banking_graph() -> StateGraph:
     
     # Add nodes
     workflow.add_node("validate_input", validate_input_node)
+    workflow.add_node("confidence_check", confidence_check_node)  # NEW: Confidence-based routing
     workflow.add_node("balance_inquiry", balance_inquiry_node)
     workflow.add_node("money_transfer_prepare", money_transfer_prepare_node)
     workflow.add_node("money_transfer_hil", money_transfer_hil_node)
@@ -383,16 +455,20 @@ def build_banking_graph() -> StateGraph:
     # Set entry point
     workflow.set_entry_point("validate_input")
     
-    # Add conditional routing after validation
+    # Add confidence check after validation (NEW ROUTING)
+    workflow.add_edge("validate_input", "confidence_check")
+    
+    # Add conditional routing after confidence check
     workflow.add_conditional_edges(
-        "validate_input",
-        route_by_intent,
+        "confidence_check",
+        route_after_confidence_check,
         {
             "balance_inquiry": "balance_inquiry",
             "money_transfer_prepare": "money_transfer_prepare",
             "account_statement": "account_statement",
             "loan_inquiry": "loan_inquiry",
-            "fallback": "fallback"
+            "fallback": "fallback",
+            "money_transfer_hil": "money_transfer_hil"  # Direct to HIL for low confidence
         }
     )
     
