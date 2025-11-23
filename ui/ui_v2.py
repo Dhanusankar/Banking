@@ -38,7 +38,17 @@ def send_message(message: str, session_id: str = None, user_id: str = "default_u
             payload["session_id"] = session_id
         
         r = requests.post(CHAT_URL, json=payload, timeout=10)
-        return r.json()
+        r.raise_for_status()  # Raise error for bad status codes
+        
+        # Check if response is JSON
+        if r.text.strip():
+            return r.json()
+        else:
+            return {"reply": {"error": "Empty response from server"}}
+    except requests.exceptions.JSONDecodeError as e:
+        return {"reply": {"error": f"Invalid JSON response: {e}"}}
+    except requests.exceptions.RequestException as e:
+        return {"reply": {"error": f"Connection error: {e}"}}
     except Exception as e:
         return {"reply": {"error": str(e)}}
 
@@ -70,7 +80,14 @@ def approve_transfer(session_id: str, approved: bool, approver_id: str = "manage
             payload["reason"] = reason
         
         r = requests.post(url, json=payload, timeout=10)
-        return r.json()
+        r.raise_for_status()
+        
+        if r.text.strip():
+            return r.json()
+        else:
+            return {"error": "Empty response from server"}
+    except requests.exceptions.JSONDecodeError as e:
+        return {"error": f"Invalid JSON response: {e}"}
     except Exception as e:
         return {"error": str(e)}
 
