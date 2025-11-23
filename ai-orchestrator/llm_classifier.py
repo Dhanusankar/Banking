@@ -55,6 +55,14 @@ Rules:
 3. confidence should be <0.50 for unclear/non-banking requests
 4. Extract amount as number (not string) for transfers
 5. Handle typos gracefully (e.g., "tansfer" = "transfer")
+6. For partial responses like "to kiran" or "kiran", extract "kiran" as recipient
+7. For partial responses like "1000" or "send 1000", extract 1000 as amount
+8. Words after "to", "for", or standalone names are recipients
+
+Examples:
+- "to kiran" → recipient: "kiran", intent: "money_transfer"
+- "1000" → amount: 1000, intent: "money_transfer" (if context suggests transfer)
+- "kiran" → recipient: "kiran", intent: "money_transfer" (if single name provided)
 
 Respond with ONLY the JSON, no explanation:"""
 
@@ -84,7 +92,7 @@ Respond with ONLY the JSON, no explanation:"""
         
         # Extract values
         intent = result.get("intent", "fallback")
-        entities = result.get("entities", {})
+        entities = result.get("entities", {}) or {}  # Ensure dict, not None
         confidence = float(result.get("confidence", 0.5))
         
         # Validate intent
@@ -113,8 +121,35 @@ Respond with ONLY the JSON, no explanation:"""
 def fallback_classify(message: str) -> Tuple[str, Dict, float]:
     """
     Fallback to simple rule-based classification if LLM fails.
+    Enhanced to handle partial conversational responses.
     """
-    m = message.lower()
+    m = message.lower().strip()
+    
+    # Handle partial responses for conversational flow
+    # Pattern: "to <name>" or "for <name>"
+    recipient_match = re.search(r'(?:to|for)\s+(\w+)', m)
+    if recipient_match:
+        return "money_transfer", {
+            "amount": None,
+            "recipient": recipient_match.group(1),
+            "account": "123"
+        }, 0.85
+    
+    # Pattern: Just a number (likely completing amount)
+    if re.match(r'^\d+$', m):
+        return "money_transfer", {
+            "amount": float(m),
+            "recipient": None,
+            "account": "123"
+        }, 0.85
+    
+    # Pattern: Just a name (likely completing recipient)
+    if re.match(r'^[a-zA-Z]+$', m) and len(m) > 2:
+        return "money_transfer", {
+            "amount": None,
+            "recipient": m,
+            "account": "123"
+        }, 0.85
     
     if any(word in m for word in ["balance", "how much"]):
         return "balance_inquiry", {}, 0.8

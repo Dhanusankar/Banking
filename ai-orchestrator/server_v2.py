@@ -42,7 +42,7 @@ def chat(req: ChatRequest):
     Workflow:
         1. Get or create session
         2. Add message to conversation history
-        3. Execute workflow graph
+        3. Execute workflow graph (preserving conversational context)
         4. Save checkpoints automatically
         5. Return result (may be PENDING_APPROVAL for HIL)
     """
@@ -56,7 +56,7 @@ def chat(req: ChatRequest):
     # Add user message to conversation
     session.add_message("user", req.message)
     
-    # Prepare initial state
+    # Prepare initial state - preserve conversational context from previous state
     initial_state = {
         "message": req.message,
         "user_id": req.user_id,
@@ -64,6 +64,15 @@ def chat(req: ChatRequest):
         "from_account": "123",  # Default account
         "execution_history": []
     }
+    
+    # Preserve conversational context from previous message if available
+    if session.workflow_state:
+        prev_state = session.workflow_state
+        # Carry forward context if user is completing a partial request
+        if prev_state.get("awaiting_completion"):
+            initial_state["context_amount"] = prev_state.get("context_amount")
+            initial_state["context_recipient"] = prev_state.get("context_recipient")
+            print(f"🔗 Restoring conversational context: amount={initial_state.get('context_amount')}, recipient={initial_state.get('context_recipient')}")
     
     # Check for idempotent execution
     if session.is_idempotent_execution():
@@ -90,6 +99,19 @@ def chat(req: ChatRequest):
                 "status": "PENDING_APPROVAL"
             }
         
+        # Check if awaiting more info (conversational flow)
+        if response.get("status") == "awaiting_info":
+            session.set_status(SessionStatus.ACTIVE)
+            session.update_state(result)  # Save context for next message
+            session.add_message("assistant", response.get("message", ""))
+            session_manager.save_session(session)
+            
+            return {
+                "reply": response,
+                "session_id": session.session_id,
+                "status": "awaiting_info"
+            }
+        
         # Check for errors
         if result.get("error"):
             session.add_message("assistant", f"Error: {result['error']}")
@@ -98,7 +120,7 @@ def chat(req: ChatRequest):
                 "session_id": session.session_id
             }
         
-        # Success - update session
+        # Success - update session and clear conversational context
         session.set_status(SessionStatus.COMPLETED)
         session.update_state(result)
         session.add_message("assistant", str(response))
