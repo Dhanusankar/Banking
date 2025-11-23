@@ -37,7 +37,7 @@ def send_message(message: str, session_id: str = None, user_id: str = "default_u
         if session_id:
             payload["session_id"] = session_id
         
-        r = requests.post(CHAT_URL, json=payload, timeout=10)
+        r = requests.post(CHAT_URL, json=payload, timeout=60)  # Increased for LLM processing
         r.raise_for_status()  # Raise error for bad status codes
         
         # Check if response is JSON

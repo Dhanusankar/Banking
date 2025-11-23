@@ -67,7 +67,7 @@ Respond with ONLY the JSON, no explanation:"""
                 "stream": False,
                 "format": "json"
             },
-            timeout=30
+            timeout=60  # Increased timeout for Llama-3 processing
         )
         response.raise_for_status()
         
