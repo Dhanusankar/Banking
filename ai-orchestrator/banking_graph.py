@@ -10,7 +10,7 @@ import os
 from checkpoint_store import checkpoint_store
 from hil_node import transfer_hil_node
 from session_manager import session_manager, SessionStatus
-from intent_classifier import classify_intent
+from llm_classifier import classify_intent_with_llm  # NEW: LLM-powered classification
 from transfer_extractor import extract_transfer_details
 import requests
 
@@ -31,6 +31,7 @@ class BankingState(TypedDict, total=False):
     hil_decision: dict
     execution_history: Annotated[list, operator.add]
     _halt: bool  # Internal flag for pausing workflow
+    confidence: float  # LLM confidence score (0.0-1.0)
 
 
 # Backend API configuration (supports cloud deployment)
@@ -101,11 +102,21 @@ def validate_input_node(state: BankingState) -> BankingState:
         state["intent"] = "fallback"
         return state
     
-    # Classify intent
-    intent = classify_intent(message)
+    # Classify intent using LLM (Llama-3)
+    intent, entities, confidence = classify_intent_with_llm(message)
     state["intent"] = intent
+    state["confidence"] = confidence
     
-    print(f"📋 Intent classified: {intent}")
+    # Store LLM-extracted entities
+    if entities:
+        if "amount" in entities and entities["amount"]:
+            state["amount"] = float(entities["amount"])
+        if "recipient" in entities and entities["recipient"]:
+            state["recipient"] = entities["recipient"]
+        if "account" in entities and entities["account"]:
+            state["from_account"] = entities["account"]
+    
+    print(f"🤖 LLM Intent: {intent} (confidence: {confidence:.2f})")
     return state
 
 
